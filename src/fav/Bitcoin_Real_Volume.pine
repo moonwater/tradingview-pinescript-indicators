@@ -1,0 +1,167 @@
+//@version=4
+study("Bitcoin Real Volume",overlay=false)
+
+// This script should be considered a CONSERVATIVE ESTIMATE of the real Bitcoin transaction volume. 
+// The priority of this script is an accurate read of the CHANGE in Bitcoin's volume profile over time. Actual volume will be higher, due to the exclusion of "suspect" exchange data in this script.
+// In 2019, Bitwise found that 95% of reported Bitcoin exchange volume on CoinMarket Cap was fake. 
+// The exchanges used in this script have been found to accurately report volume through time. For more information on the chosen exchanges, see the notes at the bottom of the script.
+
+// Key Assumptions:
+// - Only "reliable" exchanges (as identified by Bitwise and Alameda research in 2019) have been considered.
+// - Only raw Bitcoin-to-Fiat (incl. stablecoin) currency pairs have been considered. 
+// - All non-USD denominated currencies have been converted to USD using appropriate FX rates.
+// - USDT / USDC / TUSD are a "perfect" representation of the USD (the alternative was converting all these pairs back to USD, which would have approx. doubled the script's already long run-time).
+// - For Futures, only Perpetual contracts have been considered (to reduce the data requirements of this script and because PERPs generally have the most volume).
+// - Only exchanges and currency pairs available on TradingView can be considered.
+
+// Considerations
+// - Total Spot Volume was found to be 50% of Total Derivatives Volume. This is close to Alameda's "Volume Monitor" ratio of 60% (November 2019), 
+//   suggesting that despite some missing data, this is script is a good representation of Bitcoin's Volume profile change through time.
+// - This script will required updating in the future for new exchanges, derivatives products (options), changes in trading behaviour and as more data becomes available on TradingView
+
+// USER INPUTS
+
+// https://www.tradingview.com/script/FrMCPmOi-Bitcoin-Real-Volume/
+
+plot = input("Volume",options =['Volume','Ratios'],title="Information to Plot")
+
+plot_spot = input(true, 'Plot Volume "Spot Market"')
+plot_deri = input(true, 'Plot Volume "Derivatives Market"')
+plot_total = input(true, 'Plot Total Volume')
+
+plot_total_sma = input(true, 'Plot Total Volume SMA')
+ind = input('Total',options=['Total','Spot','Derivatives'],title='Volume Data to apply SMA to')
+len = input(90, 'Total Volume SMA Length')
+
+plot_bitmex = input(true, 'Plot Ratio "BitMEX-to-Total Volume"')
+plot_spot_to_deri = input(true, 'Plot Ratio "Spot-to-Derivatives Volume"')
+plot_spot_to_chain = input(true, 'Plot Ratio "Spot-Market-to-Onchain-Volume"')
+plot_total_to_chain = input(true, 'Plot Ratio "Total-Market-to-Onchain-Volume"')
+
+excl = input(false,'Exclude Non - "Bitwise Top 10" exchanges, found valid by Alameda Research (Huobi & FTX)')
+
+// SPOT EXCHANGES
+
+Binance = nz(security("BINANCE:BTCUSDT", timeframe.period, volume*close))
+     + nz(security("BINANCE:BTCUSDC", timeframe.period, volume*close))
+     + nz(security("BINANCE:BTCTUSD", timeframe.period, volume*close))
+     + nz(security("BINANCE:BTCPAX", timeframe.period, volume*close))
+     + nz(security("BINANCE:BTCBUSD", timeframe.period, volume*close))
+     + nz(security("BINANCE:BTCUSDS", timeframe.period, volume*close))
+     + nz(security("BINANCE:BTCNGN", timeframe.period, volume*close)*security("NGNUSD", timeframe.period, close)) 
+
+Bitfinex = nz(security("BITFINEX:BTCUSD", timeframe.period, volume*close))
+     + nz(security("KRAKEN:BTCEUR", timeframe.period, volume*close)*security("EURUSD", timeframe.period, close)) 
+     + nz(security("KRAKEN:BTCJPY", timeframe.period, volume*close)*security("JPYUSD", timeframe.period, close)) 
+     + nz(security("KRAKEN:BTCGBP", timeframe.period, volume*close)*security("GBPUSD", timeframe.period, close)) 
+
+Bitflyer = nz(security("BITFLYER:BTCJPY", timeframe.period, volume*close)*security("JPYUSD", timeframe.period, close))
+
+Bitstamp = nz(security("BITSTAMP:BTCUSD", timeframe.period, volume*close))
+     + nz(security("BITSTAMP:BTCEUR", timeframe.period, volume*close)*security("EURUSD", timeframe.period, close)) 
+     
+// Bittrex = nz(security("BITTREX:BTCUSD", timeframe.period, volume*close))
+//      + nz(security("BITTREX:BTCUSDT", timeframe.period, volume*close))
+     
+Coinbase = nz(security("COINBASE:BTCUSD", timeframe.period, volume*close)) 
+     + nz(security("COINBASE:BTCUSDC", timeframe.period, volume*close))
+     + nz(security("COINBASE:BTCEUR", timeframe.period, volume*close)*security("EURUSD", timeframe.period, close)) 
+     + nz(security("COINBASE:BTCGBP", timeframe.period, volume*close)*security("GBPUSD", timeframe.period, close))
+     
+// Gemini = nz(security("GEMINI:BTCUSD", timeframe.period, volume*close))
+
+Kraken = nz(security("KRAKEN:XBTUSD", timeframe.period, volume*close))
+     + nz(security("KRAKEN:XBTEUR", timeframe.period, volume*close)*security("EURUSD", timeframe.period, close)) 
+     + nz(security("KRAKEN:XBTCAD", timeframe.period, volume*close)*security("CADUSD", timeframe.period, close)) 
+
+Poloniex = nz(security("POLONIEX:BTCUSDT", timeframe.period, volume*close))
+     + nz(security("POLONIEX:BTCUSDC", timeframe.period, volume*close))
+
+Huobi = nz(security("HUOBI:BTCUSDT", timeframe.period, volume*close)) 
+     +  nz(security("HUOBI:BTCHUSD", timeframe.period, volume*close))
+
+FTX = nz(security("FTX:BTCUSD", timeframe.period, volume)) // Added to the Bitwise list for consistency with Derivatives.
+
+// DERIVATIVES EXCHANGES
+
+d_Bitmex = nz(security("Bitmex:XBTUSD", timeframe.period, volume)) 
+d_FTX = nz(security("FTX:BTCPERP", timeframe.period, volume))
+d_CME = nz(security("CME:BTC1!", timeframe.period, volume*close)) 
+     + nz(security("CME:BTC2!", timeframe.period, volume*close))
+d_Deribit = nz(security("Deribit:BTCPERP", timeframe.period, volume)) 
+d_Kraken = nz(security("Kraken:XBTUSDPERP", timeframe.period, volume)) 
+
+// PLOT VOLUME
+
+spot = Binance + Coinbase + Bitstamp + Kraken + Bitfinex + Poloniex + Bitflyer + (excl? 0 : Huobi + FTX) //Per Bitwise
+derivatives = d_Bitmex + d_CME + d_Deribit + d_Kraken + (excl? 0 : d_FTX)
+total = spot + derivatives
+trend = ind=='Total'? sma(total,len) : (ind=='Spot'? sma(spot,len) : sma(derivatives,len))
+
+plot(plot=='Volume' and plot_total ? total:na,color=color.gray,transp=0,style=plot.style_columns,title='Total')
+plot(plot=='Volume' and plot_deri ? derivatives : na,color=color.red,transp=30,style=plot.style_columns,title='Derivatives')
+plot(plot=='Volume' and plot_spot ? spot : na,color=color.aqua,transp=30,style=plot.style_columns,title='Spot')
+plot(plot=='Volume' and plot_total_sma ? trend : na,color=color.lime,style=plot.style_line,linewidth=2,title='SMA',transp=0)
+
+// ON-CHAIN DATA
+
+on_chain_transactions = security("QUANDL:BCHAIN/ETRVU", timeframe.period, sma(close,len)) //USD-denominated daily transaction value on BTC blockchain
+
+// PLOT RATIOS
+
+spot_to_block = spot/on_chain_transactions
+total_to_block = total/on_chain_transactions
+
+plot(plot=='Ratios' and plot_bitmex? d_Bitmex/total : na,color=color.orange,transp=30,style=plot.style_line,linewidth=2,title='BitMex-to-Total Volume')
+plot(plot=='Ratios' and plot_spot_to_deri ? spot/derivatives : na,color=color.red, linewidth=2,title='Spot-to-Derivatives Volume')
+plot(plot=='Ratios' and plot_spot_to_chain ? spot_to_block : na,color=color.green, linewidth=2,title='Spot-to-On-chain Volume')
+plot(plot=='Ratios' and plot_spot_to_chain ? sma(spot_to_block,365) : na,color=color.lime,linewidth=1,title='SMA Spot-to-On-chain Volume')
+plot(plot=='Ratios' and plot_total_to_chain ? total_to_block : na,color=color.blue, linewidth=2,title='Total-to-On-chain Volume')
+plot(plot=='Ratios' and plot_total_to_chain ? sma(total_to_block,365) : na,color=color.aqua,linewidth=1,title='SMA Total-to-On-chain Volume')
+
+// NOTES ON DATA SELECTION
+
+// This script uses the top 7 spot exchanges found by Bitwise to accurately report volume:
+// - Binance
+// - Bitfinex
+// - BitFlyer
+// - Bitstamp
+// - Coinbase
+// - Kraken
+// - Poloniex
+// The following 3 “Bitwise Top 10” exchanges were excluded due to their low (<$10M) daily volume or because their were not available on TradingView:
+// - Bittrex
+// - Gemini
+// - ItBit
+
+// To the above Spot Exchange list, the following were added, as they were found by Alameda Research to accurately report volume (1-to-1):
+// - Huobi Global
+// - FTX (for consistency as used for Derivatives)
+
+// For derivatives volume, the following exchanges were chosen due to their assessment by Alameda as reporting accurate volume:
+// - BitMEX
+// - CME
+// - Deribit
+// - FTX (despite questionable independence of assessment)
+
+// The following exchanges were excluded from this indicator, despite being found by Alameda Research as reporting volume accurately (1-to-1), for the following reason(s):
+// 1. They were stated in the Bitwise report as "suspect". While a number of them may have real volume, the priority of this indicator is a consistent read of volume change over time.
+// 2. The exchange/currency pairs are not on TradingView
+// 3. Their daily trading volume is less than $10M USD
+// These exchanges include:
+// - BitBank
+// - BitMax
+// - CoinOne
+// - Gate.io
+// - KuCoin
+// - Liquid
+// - OKEx
+// - Upbit
+// - CoinCheck
+// - GoPax
+// - Huobi HBUS)
+// - ItBit
+// - Korbit 
+// - OKCoin
+// - Zaif
+

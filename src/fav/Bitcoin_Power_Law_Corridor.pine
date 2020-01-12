@@ -1,0 +1,62 @@
+//@version=4
+study("Bitcoin Power Law Corridor",overlay=true)
+// Based on "Bitcoin’s natural long-term power-law corridor of growth" by Harold Christopher Burger
+
+// https://www.tradingview.com/script/UsGwzxD4-Bitcoin-Power-Law-Corridor/
+
+// Days X-Axis Value
+
+start = time == timestamp(2010,7,19,0,0) // First BLX Bitcoin Date
+days = security("BNC:BLX", "D", barssince(start))
+offset = 564 // days between 2009/1/1 and "start"
+d = days + offset
+
+// Burger's Regression 
+
+a = input(-17.01593313,'Regression "a"')
+b = input(5.84509376,'Regression "b"')
+e = a + b*log10(d)
+y = pow(10,e)
+
+// Resistance Log (est)
+
+a2 = input(-13.3,'Resistance "a"')
+b2 = input(5.0,'Resistance "b"')
+e2 = a2 + b2*log10(d)
+y2 = pow(10,e2)
+
+// Support Log (est)
+
+a3 = input(-17.35,'Support "a"')
+b3 = input(5.84509376,'Support "b"')
+e3 = a3 + b3*log10(d)
+y3 = pow(10,e3)
+
+// Label Deltas
+
+delta_res = round((y2/close - 1.0)*100)
+delta_cen = round((y/close - 1.0)*100)
+delta_sup = round((y3/close - 1.0)*100)
+
+m1 = close < y2? "+" : ""
+m2 = close < y? "+" : ""
+m3 =  close < y3? "+" : ""
+
+// Plot
+
+p1 = plot(y,color = color.gray,title="Log Reg")
+p2 = plot(y2,color = color.red,title="Resistance")
+p3 = plot(y3,color = color.lime,title="Support")
+
+fill = input(true,"Plot Line Fill?")
+fill(p1,p2,color=(fill?color.red:na),transp=90)
+fill(p1,p3,color=(fill?color.green:na),transp=90)
+
+// Labels
+
+labels = input(true,"Plot Opportunity Labels?")
+
+if labels and barstate.islast
+    label.new(bar_index, y3, style=label.style_labelup,
+         text="Resistance = " + m1 + tostring(delta_res) + "% \nCentre = " + m2 + tostring(delta_cen) + "% \nSupport = " + m3 + tostring(delta_sup) + "%",
+         textcolor=color.white,color=color.gray)

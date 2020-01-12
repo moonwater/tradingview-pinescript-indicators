@@ -1,0 +1,30 @@
+// © Dreadblitz
+//@version=4
+study(title="Dynamic RSI",shorttitle = "DRSI", format=format.price, precision=0, overlay=false)
+//
+DZbuy = 0.1
+DZsell = 0.1
+Period = 14
+Lb = 60
+//
+red=#FF0000
+green=#32CD32
+//
+RSILine = rsi(close,Period)
+jh = highest(RSILine, Lb)
+jl = lowest(RSILine, Lb)
+jc = (wma((jh-jl)*0.5,Period) + wma(jl,Period))
+Hiline = jh - jc * DZbuy
+Loline = jl + jc * DZsell
+R = (4 * RSILine + 3 * RSILine[1] + 2 * RSILine[2] + RSILine[3] ) / 10
+//
+a=plot(R, title='R', color=color.black, linewidth=1, style=plot.style_line, transp=0)
+b=plot(Hiline, title='Hiline', color=color.black, linewidth=1, style=plot.style_line, transp=0)
+c=plot(Loline, title='Loline', color=color.black, linewidth=1, style=plot.style_line, transp=0)
+plot(jc, title='Jc', color=color.purple, linewidth=1, style=plot.style_line, transp=50)
+//
+col_1 = R > Hiline ? red:na
+col_2 = R < Loline ? green:na
+//
+fill(a, b, color=col_1,transp=0)
+fill(a, c, color=col_2,transp=0)

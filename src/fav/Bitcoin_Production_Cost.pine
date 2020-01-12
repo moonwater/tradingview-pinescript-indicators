@@ -1,0 +1,135 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © capriole_charles
+
+//@version=4
+study("Bitcoin Production Cost",overlay=true)
+
+// INPUTS
+
+p_old = input(0.05,"Ave. Electricity Cost $USD KWh (Pre June 2019)")
+p_new = input(0.04,"Ave. Electricity Cost $USD KWh (Post June 2019")
+elec_pct = input(0.60,"% electricity to Total Mining Costs")
+plot_mp = input(true,"Plot BTC Miner Price (Close + Transaction Fee Revenue / BTC)")
+plot_tc = input(true,"Plot Production & Electricity Cost Curves")
+labels = input(false,"Plot Annual Profit Margin Labels?")
+
+// DATA
+
+fees = security("QUANDL:BCHAIN/TRFUS","D",close)
+
+elec_consumption() =>
+    // Cambridge Bitcoin Electricity Consumption Index (CBECI) - Bitcoin's global electricity consumption in TwH.
+    // NB: Uses MONTHLY averages of raw data from CBECI. TV script run-time is too slow with Daily/Weekly data here.
+    //     This requires manual updating once a month for ongoing accuracy.
+    
+    d = dayofmonth
+    m = month
+    y = year
+    
+    e = float(na)
+    e := d==15 and m==12 and y==2014? 1.85803466666667 :
+         d==15 and m==1 and y==2015? 1.84261966666667 :
+         d==15 and m==2 and y==2015? 1.910415 :
+         d==15 and m==3 and y==2015? 2.07733266666667 :
+         d==15 and m==4 and y==2015? 2.125437 :
+         d==15 and m==5 and y==2015? 2.10028 :
+         d==15 and m==6 and y==2015? 2.149371 :
+         d==15 and m==7 and y==2015? 2.21597833333333 :
+         d==15 and m==8 and y==2015? 2.335304 :
+         d==15 and m==9 and y==2015? 2.32026033333333 :
+         d==15 and m==10 and y==2015? 2.15466433333333 :
+         d==15 and m==11 and y==2015? 2.29930733333333 :
+         d==15 and m==12 and y==2015? 2.83890766666667 :
+         d==15 and m==1 and y==2016? 3.76853166666667 :
+         d==15 and m==2 and y==2016? 4.984321 :
+         d==15 and m==3 and y==2016? 5.751456 :
+         d==15 and m==4 and y==2016? 6.09711766666667 :
+         d==15 and m==5 and y==2016? 6.65274233333333 :
+         d==15 and m==6 and y==2016? 6.44479366666667 :
+         d==15 and m==7 and y==2016? 5.618041 :
+         d==15 and m==8 and y==2016? 4.439068 :
+         d==15 and m==9 and y==2016? 4.43830366666667 :
+         d==15 and m==10 and y==2016? 4.95330933333334 :
+         d==15 and m==11 and y==2016? 5.12000766666667 :
+         d==15 and m==12 and y==2016? 5.80765 :
+         d==15 and m==1 and y==2017? 6.54180066666666 :
+         d==15 and m==2 and y==2017? 7.62688133333333 :
+         d==15 and m==3 and y==2017? 7.09545833333333 :
+         d==15 and m==4 and y==2017? 6.71110866666667 :
+         d==15 and m==5 and y==2017? 7.62911266666667 :
+         d==15 and m==6 and y==2017? 11.720838 :
+         d==15 and m==7 and y==2017? 13.17811 :
+         d==15 and m==8 and y==2017? 12.0859133333333 :
+         d==15 and m==9 and y==2017? 14.9976133333333 :
+         d==15 and m==10 and y==2017? 17.342 :
+         d==15 and m==11 and y==2017? 19.9178833333333 :
+         d==15 and m==12 and y==2017? 22.4013633333333 :
+         d==15 and m==1 and y==2018? 28.01982 :
+         d==15 and m==2 and y==2018? 34.9384066666667 :
+         d==15 and m==3 and y==2018? 34.81782 :
+         d==15 and m==4 and y==2018? 36.8095066666667 :
+         d==15 and m==5 and y==2018? 37.6163133333333 :
+         d==15 and m==6 and y==2018? 41.5086133333333 :
+         d==15 and m==7 and y==2018? 44.4878133333333 :
+         d==15 and m==8 and y==2018? 49.8791433333333 :
+         d==15 and m==9 and y==2018? 51.38618 :
+         d==15 and m==10 and y==2018? 51.4356766666667 :
+         d==15 and m==11 and y==2018? 47.8622633333333 :
+         d==15 and m==12 and y==2018? 36.0539266666667 :
+         d==15 and m==1 and y==2019? 36.1260666666667 :
+         d==15 and m==2 and y==2019? 36.2145133333333 :
+         d==15 and m==3 and y==2019? 36.9071833333333 :
+         d==15 and m==4 and y==2019? 39.3832533333333 :
+         d==15 and m==5 and y==2019? 41.2841866666667 :
+         d==15 and m==6 and y==2019? 47.9736866666667 :
+         d==15 and m==7 and y==2019? 56.3321133333333 :
+         d==15 and m==8 and y==2019? 61.70129 :
+         d==15 and m==9 and y==2019? 67.4179133333333 :
+         d==15 and m==10 and y==2019? 77.0788966666667 :
+         d==15 and m==11 and y==2019? 73.8160033333333 :
+         d==15 and m==12 and y==2019? 72.26226 : na
+    e
+
+btc_mined_per_day() =>
+    blocks_per_day = 144
+    block_reward = time < timestamp(2012,11,28,0,0) ? 50 :
+         time < timestamp(2016,7,9,0,0) ? 25 :
+         time < timestamp(2020,5,14,0,0) ? 12.5 : 6.25 // 2020 estimated
+    btc_per_day = blocks_per_day*block_reward
+    btc_per_day    
+
+// CALCULATIONS
+
+miner_price = close + fees/btc_mined_per_day()
+
+elec = float(na)
+elec := na(elec_consumption()) ? elec[1] : elec_consumption()
+
+p = time < timestamp(2019,6,30,0,0) ? p_old : p_new
+
+btc_elec_cost = float(na)
+btc_elec_cost := (elec/365.25)*pow(10,9) / btc_mined_per_day() * p //convert: --> days --> KwH --> Per BTC --> * Price/KwH
+
+total_cost = btc_elec_cost/elec_pct   
+
+margin = ((miner_price/total_cost)-1.0)*100.0
+profit_margin = round(sma(margin,365))
+m = ''
+m := profit_margin > 0 ? "+" : ''
+
+// PLOT
+
+a = plot(plot_tc ? btc_elec_cost : na,color=color.red,linewidth=2,title=" Electricity")
+tc = plot(plot_tc ? total_cost : na,color=color.purple,linewidth=1,title=" Total")
+fill(a,tc,color=color.red,transp=70)
+
+mp = plot(plot_mp ? miner_price : na,color=color.green,linewidth=2,title=" BTC Miner Price")
+clr = miner_price < total_cost ? color.red : na
+fill(mp,tc,color=clr,transp=20)
+
+// LABELS
+
+if labels and (barstate.islast or (dayofmonth ==1 and month ==1) and profit_margin)
+    label.new(bar_index, btc_elec_cost, style=label.style_labelup,
+         text="Margin (p.a.)\n" + m + tostring(profit_margin) +"%",
+         textcolor=color.white,color=color.green)

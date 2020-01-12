@@ -1,0 +1,66 @@
+//@version=4
+
+// https://www.tradingview.com/script/rPhdQt4U-Blockchain-Fundamentals-MCCD-Miner-Capitulation-Conv-Div/
+
+study("Blockchain Fundamentals - MCCD - Miner Capitulation & Convergence Divergence", shorttitle="MCCD")
+
+maSelect = input(title="❓ Price MA Type (SMA is default - the rest experimental)", defval="SMA", options=["EMA", "SMA", "VWMA", "WMA"])
+yes1 = input(title="Enable Bar Color by Trade?", type=input.bool, defval=false)
+yes2 = input(title="Enable Divergence Display?", type=input.bool, defval=false)
+plotInput = input(title="❓ Divergence Display: Histogram or Columns", defval="Histogram", options=["Histogram", "Columns"])
+yes3 = input(title="Plot Hashrate?", type=input.bool, defval=false)
+yes4 = input(title="Enable Background Coloration for Capitulation?", type=input.bool, defval=true)
+yes5 = input(title="Plot Capitulation/Recovery Points?", type=input.bool, defval=true)
+//get difficulty
+diff = security("quandl:bchain/diff", "D", close)
+hash = security("quandl:bchain/hrate", "D", close)
+
+//choose MA function
+getMA(src, length) =>
+    ma = 0.0
+    if maSelect == "EMA"
+        ma := ema(src, length)
+        ma
+    if maSelect == "SMA"
+        ma := sma(src, length)
+        ma
+    if maSelect == "VWMA"
+        ma := vwma(src, length)
+        ma
+    if maSelect == "WMA"
+        ma := wma(src, length)
+        ma
+    ma
+
+
+//ribbon lengths
+len60 = 60
+len30 = 30
+
+//Calculate ribbons
+h60 = getMA(hash, len60)
+h30 = getMA(hash, len30)
+
+//Convergence / Divergence Histogram - Something I added
+macd = h30-h60
+
+histogram = (h30 - h60)
+histogramColor = histogram < 0 ? histogram[1] < histogram ? #5900F3 : #ED00FF : histogram > 0 ? histogram[1] < histogram ? #6CDEF1 : #275B6C : color.yellow
+plot(not yes2 ? h30 : na, color=color.yellow, linewidth=2, transp=0)
+plot(not yes2 ? h60 : na, color=color.orange, linewidth=2, transp=0)
+
+//Buy/Sell Signals
+long = crossover(h30, h60)
+short = crossunder(h30, h60)
+
+//Plots
+plotStyle = plotInput=="Columns" ? plot.style_columns : plot.style_histogram
+plot(yes2 ? histogram : na, "Histogram", color=histogramColor, style = plotStyle, transp=5)
+plot(yes2 ? 0 : na, "Zero Line", color=color.yellow)
+plotshape(yes5 and long ? h30 : na, title="Buy?", color=#FCFC03, textcolor=#FCFC03, transp=0, style=shape.triangleup, location=location.bottom, size=size.tiny,text="🤑Recovery",offset=0, transp=0)
+plotshape(yes5 and short ? h30 : na, title="Sell?", color=#FCFC03, textcolor=#FCFC03, transp=0, style=shape.triangledown, location=location.top, size=size.tiny,text="💀Miner\nCapitulation",offset=0, transp=0)
+plot(yes3 and not yes2 ? hash : na, color=color.gray, transp=60)
+//Background Color
+bgcolor(yes4 and h30 < h60 ? color.maroon : na)
+//Trade State Bar Coloration
+barcolor(yes1 ? barssince(long) > barssince(short) ? #770043 : #51CFEE : na)

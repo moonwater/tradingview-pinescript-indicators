@@ -40,21 +40,21 @@ colFinal = colfastL and colslowL? aqua : colfastS and colslowS? orange : gray
 //Slow EMA Final Color Rules
 colFinal2 = colslowL  ? lime : colslowS ? red : gray
 //Fast EMA Plots
-p1=plot(ema1, title="Fast EMA 1", style=line, linewidth=2, color=colFinal)
+p1=plot(ema1, title="Fast EMA 1", style=line, linewidth=1, color=colFinal)
 plot(ema2, title="Fast EMA 2", style=line, linewidth=1, color=colFinal)
 plot(ema3, title="Fast EMA 3", style=line, linewidth=1, color=colFinal)
 plot(ema4, title="Fast EMA 4", style=line, linewidth=1, color=colFinal)
 plot(ema5, title="Fast EMA 5", style=line, linewidth=1, color=colFinal)
-p2=plot(ema6, title="Fast EMA 6", style=line, linewidth=2, color=colFinal)
-fill(p1,p2,color=silver, transp=60)
+p2=plot(ema6, title="Fast EMA 6", style=line, linewidth=1, color=colFinal)
+fill(p1,p2,color=colFinal, transp=60)
 //Slow EMA Plots
-p3=plot(ema7, title="Slow EMA 7", style=line, linewidth=4, color=colFinal2)
-plot(ema8, title="Slow EMA 8", style=line, linewidth=3, color=colFinal2)
-plot(ema9, title="Slow EMA 9", style=line, linewidth=3, color=colFinal2)
-plot(ema10, title="Slow EMA 10", style=line, linewidth=3, color=colFinal2)
-plot(ema11, title="Slow EMA 11", style=line, linewidth=3, color=colFinal2)
-p4=plot(ema12, title="Slow EMA 12", style=line, linewidth=4, color=colFinal2)
-fill(p3,p4, color=silver, transp=60)
+p3=plot(ema7, title="Slow EMA 7", style=line, linewidth=1, color=colFinal2)
+plot(ema8, title="Slow EMA 8", style=line, linewidth=1, color=colFinal2)
+plot(ema9, title="Slow EMA 9", style=line, linewidth=1, color=colFinal2)
+plot(ema10, title="Slow EMA 10", style=line, linewidth=1, color=colFinal2)
+plot(ema11, title="Slow EMA 11", style=line, linewidth=1, color=colFinal2)
+p4=plot(ema12, title="Slow EMA 12", style=line, linewidth=1, color=colFinal2)
+fill(p3,p4, color=colFinal2, transp=60)
 
 
 //////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,85 @@
+//@version=4
+// ATR (Average True Range) by Sylvain Vervoort
+// I am using part of this code published by @PineCoders and @HPotter
+// Author: @gu5tavo71, v1.0, 2019.01.19
+// Disclaimer: I am not a financial advisor.
+//             For purpose educate only. Use at your own risk.
+study(title = "ATR [Gu5]", shorttitle = "ATR", overlay = true, precision = 2)
+
+// ————— Inputs
+src = input(close, title = "Source")
+AtrSrc = input(hl2, title = "Atr Source")
+AtrLen = input(title = "ATR Length", type = input.integer, defval = 22)
+MaLen = input(9, minval = 1, title = "MA Length")
+Mult = input(title = "ATR Multiplier", type = input.float, step = 0.1, defval = 3.0)
+
+// ——————————————— Colors
+cOrange = #f57f17//Orange
+cGreen100 = #006400FF//Green 100%
+cLightGreen = #66bb6a//Light Green
+cRed100 = #8B0000FF//Red 100%
+cLightRed = #d32f2f//Light Red
+
+// ————— Calculations
+f_AtrVal =  Mult * atr(AtrLen)
+f_AtrUp =   AtrSrc - f_AtrVal
+f_AtrUpPv = nz(f_AtrUp[1], f_AtrUp)
+f_AtrUp := (src[1]) > f_AtrUpPv ?
+  max(f_AtrUp, f_AtrUpPv) : f_AtrUp
+f_AtrDn =   AtrSrc + f_AtrVal
+f_AtrDnPv = nz(f_AtrDn[1], f_AtrDn)
+f_AtrDn := (src[1]) < f_AtrDnPv ?
+  min(f_AtrDn, f_AtrDnPv) : f_AtrDn
+
+f_AtrUp2 = AtrSrc - f_AtrVal
+f_AtrDn2 = AtrSrc + f_AtrVal
+
+f_dir = 1
+f_dir := nz(f_dir[1], f_dir)
+f_dir := f_dir == -1 and src > f_AtrDnPv ? 1 :
+  f_dir == 1 and src < f_AtrUpPv ? -1 : f_dir
+
+TpUp = valuewhen(f_dir == 1 and f_dir[1] == -1, src,0)
+TpDn = valuewhen(f_dir == -1 and f_dir[1] == 1, src,0)
+TpVal = 0.0
+TpVal := f_dir == 1 and f_dir[1] == -1 ? TpUp :
+  f_dir == -1 and f_dir[1] == 1 ? TpDn :
+  nz(TpVal[1])
+
+f_atrCol = f_dir != f_dir[1] ? cOrange :
+  f_dir ==  1 and TpVal >= f_AtrUp ? cOrange :
+  f_dir ==  1 and TpVal <  f_AtrUp ? cGreen100 :
+  f_dir == -1 and TpVal <= f_AtrDn ? cOrange :
+  f_dir == -1 and TpVal >  f_AtrDn ? cRed100 : na
+
+f_crossCol =
+  f_dir ==  1 and f_dir[1] == -1 ? cGreen100 :
+  f_dir == -1 and f_dir[1] ==  1 ? cRed100 : na
+
+f_tpCol = 
+  (f_dir ==  1 and TpVal >= f_AtrUp) or
+  (f_dir == -1 and TpVal <= f_AtrDn) ? cOrange : na
+
+f_alert = 
+  (f_AtrUp != f_AtrUp[1] and TpVal <  f_AtrUp ) or
+  (f_AtrDn != f_AtrDn[1] and TpVal >  f_AtrDn)
+
+// ————— Plots
+plot (
+  f_dir ==  1 ? f_AtrUp  :
+  f_dir == -1 ? f_AtrDn  : na,
+  title = "Atr", color = f_atrCol, linewidth = 3, style = plot.style_linebr
+  )
+
+plot(
+  f_dir != f_dir[1] ? src : na, 
+  title = "x", color = f_crossCol, linewidth = 4, style = plot.style_circles
+  )
+
+plot (TpVal, color = f_tpCol, title = "Buy/Sell", style = plot.style_circles)
+
+alertcondition(f_dir != f_dir, title = "Atr", message = "Atr")
+
+// plotchar (f_alert, title ="alert", location = location.bottom)
+// alertcondition(f_alert, title = "TP",
+  // message = 'Change Take Profit {{plot("Atr")}}')

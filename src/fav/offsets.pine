@@ -1,0 +1,27 @@
+study("ffffff", shorttitle="ffffff")
+alength=input(5, title="Wave A Length"), blength=input(25, title="Wave B Length"), clength=input(50, title="Wave C Length")
+lengthMA=input(4, title="Wave SMA Length")
+mse=input(false, title="Identify Spikes/Exhaustions")
+cutoff = input(10, title="Cutoff")
+ebc=input(false, title="Color Bars on Spikes/Exhaustions")
+//src=hlc3
+src=close
+
+
+len5 = input(5, minval=1, title="lenss5")
+ema5 = ema(src, len5)
+
+len20 = input(20, minval=1, title="lenss20")
+ema20 = ema(src, len20)
+
+len200 = input(50, minval=1, title="lenss200")
+ema200 = ema(src, len200)
+
+//plot(close, color=blue, style=histogram, linewidth=4, title="WaveA")
+//plot(close, color=blue, style=line, linewidth=1, title="close")
+//plot(ema20, color=red, style=line, linewidth=1, title="hlc3")
+//plot(ema200, color=red, style=line, linewidth=1, title="200")
+
+plot(100*((close-ema20)/ema20), color=lime, style=histogram, linewidth=4, title="Waveb")
+plot(100*((close-ema5)/ema5), color=blue, style=histogram, linewidth=4, title="Wavea")
+plot(100*((close-ema200)/ema200), color=red, style=histogram, linewidth=1, title="Wavec")

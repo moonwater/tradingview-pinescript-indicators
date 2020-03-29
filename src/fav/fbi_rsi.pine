@@ -1,0 +1,69 @@
+//@version=4
+study("Fibonacci_RSI", shorttitle="Fibonacci_RSI",overlay=false)
+
+green_ColorScope(value)=>
+  value >= 10 ? #001B87 :
+  value == 09 ? #001B87 :
+  value == 08 ? #001B87 :
+  value == 07 ? #001B87 :
+  value == 06 ? #001B87 :
+  value == 05 ? #001B87 :
+  value == 04 ? #0058B3 :
+  value == 03 ? #00A6D7 :
+  value == 02 ? #30E7ED :
+  value == 01 ? #86FAF2 : color.white
+red_ColorScope(value)=>
+  value >= 10 ? #4c0010 :
+  value == 09 ? #5b0013 :
+  value == 08 ? #6b0017 :
+  value == 07 ? #7a001a :
+  value == 06 ? #89001d :
+  value == 05 ? #990021 :
+  value == 04 ? #a31937 :
+  value == 03 ? #ad324d :
+  value == 02 ? #b74c63 :
+  value == 01 ? #c16679 : color.white
+
+Length=input(14) 
+rsi1 = rsi(close, Length*13)
+rsi2 = rsi(close, Length*8)
+rsi3 = rsi(close, Length*5)
+rsi4 = rsi(close, Length*3)
+rsi5 = rsi(close, Length*2)
+rsi6 = rsi(close, Length)
+
+color1 = rsi1 > 50 ? green_ColorScope(1) : red_ColorScope(1)
+color2 = rsi2 > rsi1 ? green_ColorScope(7) : red_ColorScope(7)
+color3 = rsi3 > rsi2 ? green_ColorScope(6) : red_ColorScope(6)
+color4 = rsi4 > rsi3 ? green_ColorScope(5) : red_ColorScope(5)
+color5 = rsi5 > rsi4 ? green_ColorScope(4) : red_ColorScope(4)
+color6 = rsi6 > rsi5 ? green_ColorScope(3) : red_ColorScope(3)
+
+plot(rsi1 + 34, color=color.orange, title="34 DOWN")
+plot(rsi1 - 34, color=color.lime, title="34 DOWN")
+
+plot(rsi1 + 27, color=color.orange, title="27 DOWN", linewidth=2)
+plot(rsi1 - 27, color=color.lime, title="27 DOWN", linewidth=2)
+
+plot(rsi1 + 21, color=color.orange, title="21 UP", transp=50)
+plot(rsi1 - 21, color=color.lime, title="21 DOWN", transp=50)
+
+plot(rsi1 + 13, color=color.orange, title="13 UP", transp=70)
+plot(rsi1 - 13, color=color.lime, title="13 DOWN", transp=70)
+
+plot(rsi1 + 8, color=color.orange, title="8 UP", transp=75)
+plot(rsi1 - 8, color=color.lime, title="8 DOWN", transp=75)
+
+plot(rsi1, color=color1, title="RSI * 13")
+plot(rsi2, color=color2, title="RSI * 8")
+plot(rsi3, color=color3, title="RSI * 5")
+plot(rsi4, color=color4, title="RSI * 3")
+plot(rsi5, color=color5, title="RSI * 2")
+plot(rsi6, color=color6, linewidth=2, title="RSI")
+    
+plot(cross(rsi1, 50) ? rsi1 : na, color = color.black , style = plot.style_circles, linewidth = 3) //cross over
+plot(crossover(rsi1, 50) ? rsi1 : na, color = color.lime , style = plot.style_circles, linewidth = 2) //cross over
+plotshape(crossover(rsi1, 50) ? rsi1 : na, color = color.blue , style = shape.triangleup, location=location.bottom, size=size.tiny) //cross under
+plot(crossunder(rsi1, 50) ? rsi1 : na, color = color.red , style = plot.style_circles, linewidth = 2) //cross under
+plotshape(crossunder(rsi1, 50) ? rsi1 : na, color = color.red , style = shape.triangledown, location=location.top, size=size.tiny) //cross under
+

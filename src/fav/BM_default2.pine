@@ -1,9 +1,9 @@
-study("my_两组MMA", shorttitle="2BandMMA_", overlay=true)
+study("BM_default", shorttitle="BM_default_2BandMMA_", overlay=true)
 src=close 
 // shortterm
 stsl=plot(ema(src, 3), color=#000066, linewidth=1)
 plot(ema(src, 5), color=#000099)
-plot(ema(src, 8), color=#0000cc)
+plot(ema(src, 8), color=#0000cc, linewidth=2)
 plot(ema(src, 10), color=#0000ff)
 plot(ema(src, 12), color=#0033cc)
 stll=plot(ema(src, 15), color=#0033ff)

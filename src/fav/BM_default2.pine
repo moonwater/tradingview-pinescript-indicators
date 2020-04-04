@@ -1,103 +1,37 @@
-//
-
-// @author LazyBear
-
-//
-
-// If you use this code in its original/modified form, do drop me a note. 
-
-//
-
 study("my_两组MMA", shorttitle="2BandMMA_", overlay=true)
-
-
-
-src=close
-
-
-
-// shortterm 
-
+src=close 
+// shortterm
 stsl=plot(ema(src, 3), color=#000066, linewidth=1)
-
 plot(ema(src, 5), color=#000099)
-
 plot(ema(src, 8), color=#0000cc)
-
 plot(ema(src, 10), color=#0000ff)
-
 plot(ema(src, 12), color=#0033cc)
-
 stll=plot(ema(src, 15), color=#0033ff)
-
-
-
 // longterm
-
 ltsl=plot(ema(src, 30), color=#990000, linewidth=1)
-
 plot(ema(src, 35), color=#990033)
-
 plot(ema(src, 40), color=#cc0000)
-
 plot(ema(src, 45), color=#cc0033)
-
 plot(ema(src, 50), color=#ff0000)
-
 ltll=plot(ema(src, 60), color=#ff0033)
-
 plot(ema(src, 90), color=gray,style=line, title="MMA91", linewidth=1)
-
-
-
 fill(stsl, stll, blue)
-
 fill(ltsl, ltll, red)
-
-
-
 t1=plot(ema(src, 25), color=green, style=line, title="MMA25", linewidth=3, transp=10)
-
 t2=plot(ema(src, 20), color=olive, style=line, title="MMA20", linewidth=1, transp=0)
-
 fill(t2,t1, color=yellow, transp=80)
-
-
-
-
-
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
-
 basePeriods = input(26, minval=1, title="Base Line Periods")
-
 laggingSpan2Periods = input(52, minval=1, title="Lagging Span 2 Periods"),
-
 displacement = input(26, minval=1, title="Displacement")
-
-
-
 donchian(len) => avg(lowest(len), highest(len))
-
-
-
 conversionLine = donchian(conversionPeriods)
-
 baseLine = donchian(basePeriods)
-
 leadLine1 = avg(conversionLine, baseLine)
-
 leadLine2 = donchian(laggingSpan2Periods)
-
-
-
 plot(baseLine, color=#630066, title="Base Line", linewidth=3)
-
 p1 = plot(leadLine1, offset = displacement - 1, color=green,
-
  title="Lead 1")
-
-p2 = plot(leadLine2, offset = displacement - 1, color=red, 
-
+p2 = plot(leadLine2, offset = displacement - 1, color=red,
  title="Lead 2")
-
 fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)

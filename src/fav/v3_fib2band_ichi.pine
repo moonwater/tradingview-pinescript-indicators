@@ -1,0 +1,78 @@
+study("N_EMAs", overlay=true)
+
+len1=input(8, title="Vade 1")
+len2=input(13, title="Vade 2")
+len3=input(21, title="Vade 3")
+len4=input(25, title="Vade 4")
+len5=input(34, title="Vade 5")
+len6=input(55, title="Vade 6")
+len7=input(144, title="Vade 7")
+len8=input(169, title="Vade 8")
+len9=input(200, title="Vade 9")
+len10=input(576, title="Vade 10")
+len11=input(676, title="Vade 11")
+len12=input(89, title="Vade 12")
+
+
+
+M1=ema(close, len1)
+M2=ema(close, len2)
+M3=ema(close, len3)
+M4=ema(close, len4)
+M5=ema(close, len5)
+M6=ema(close, len6)
+M7=ema(close, len7)
+M8=ema(close, len8)
+M9=ema(close, len9)
+M10=ema(close, len10)
+M11=ema(close, len11)
+M12=ema(close, len12)
+
+
+plot(M1, color=olive, linewidth=3)
+plot(M2, color=olive, linewidth=1, transp=60)
+plot(M3, color=green, linewidth=1, transp=60)
+plot(M4, color=green, linewidth=4)
+plot(M5, color=olive, linewidth=1, transp=60)
+plot(M6, color=olive, linewidth=1, transp=60)
+p1=plot(M7, color=navy, linewidth=1, transp=99)
+p2=plot(M8, color=navy, linewidth=1, transp=99)
+plot(M9, color=purple, linewidth=2, transp=10)
+p3=plot(M10, color=purple, linewidth=1, transp=99)
+p4=plot(M11, color=purple, linewidth=1, transp=99)
+plot(M12, color=olive, linewidth=2)
+fill(p1,p2, color=navy, transp=80)
+fill(p3,p4, color=purple, transp=60)
+
+
+//default
+//conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
+//basePeriods = input(26, minval=1, title="Base Line Periods")
+//laggingSpan2Periods = input(52, minval=1, title="Lagging Span 2 Periods"),
+//displacement = input(26, minval=1, title="Displacement")
+
+conversionPeriods = input(10, minval=1, title="Conversion Line Periods"),
+basePeriods = input(30, minval=1, title="Base Line Periods")
+laggingSpan2Periods = input(60, minval=1, title="Lagging Span 2 Periods"),
+displacement = input(30, minval=1, title="Displacement")
+
+
+donchian(len) => avg(lowest(len), highest(len))
+
+conversionLine = donchian(conversionPeriods)
+baseLine = donchian(basePeriods)
+leadLine1 = avg(conversionLine, baseLine)
+leadLine2 = donchian(laggingSpan2Periods)
+
+plot(conversionLine, color=#0496ff, title="Conversion Line", linewidth=3)
+plot(baseLine, color=#991515, title="Base Line", linewidth=3)
+plot(close, offset = -displacement + 1, color=#459915, title="Lagging Span")
+
+q1 = plot(leadLine1, offset = displacement - 1, color=green,
+ title="Lead 1")
+q2 = plot(leadLine2, offset = displacement - 1, color=red, 
+ title="Lead 2")
+fill(q1, q2, color = leadLine1 > leadLine2 ? green : red, transp=90)
+
+
+
